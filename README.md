@@ -33,6 +33,11 @@
 | tweak an existing model | semi-new model | change prior |
 
 
+Some code for topic modeling:
+
+"Gaussian LDA for Topic Models with Word Embeddings" by Das et. al.
+https://github.com/rajarshd/Gaussian_LDA
+
 
 
 
