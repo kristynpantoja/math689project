@@ -35,6 +35,13 @@
 
 Some code for topic modeling:
 
+Main Paper:
+"Discovering Discrete Latent Topics with Neural Variational Inference" by Miao et. al.
+
+Other potentially useful stuff:
+"Neural Variational Inference for Text Modeling" by Miao et. al. 
+https://github.com/ysmiao/nvdm
+
 "Gaussian LDA for Topic Models with Word Embeddings" by Das et. al.
 https://github.com/rajarshd/Gaussian_LDA
 
