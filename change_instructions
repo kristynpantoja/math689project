@@ -1,0 +1,16 @@
+Workflow:
+
+git checkout test  # go to test
+# make your changes in test
+git add . # add all files
+git commit -m "informative message" # commit changes
+git checkout master # go to master
+git pull # get changes from other person from remote, if any
+git merge test # merge changes from test into your master, fix conflicts if any
+git push # push to remote
+git checkout test # go back to test
+git merge master # merge other person's changes into your test
+
+
+
+
