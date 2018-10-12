@@ -24,6 +24,8 @@
 | SD-CBOW | X | X |
 | tentatively dynamic word embeddings | X | X |
 
+
+
 | Idea: | Type of Problem | Bayesian |
 | ------------- |:-------------:|-------------:|
 | Comparison of downstream tasks | Empirical | not |
@@ -33,7 +35,7 @@
 | tweak an existing model | semi-new model | change prior |
 
 
-Some code for topic modeling:
+## Some code for topic modeling:
 
 Main Paper:
 "Discovering Discrete Latent Topics with Neural Variational Inference" by Miao et. al.
@@ -45,6 +47,11 @@ https://github.com/ysmiao/nvdm
 "Gaussian LDA for Topic Models with Word Embeddings" by Das et. al.
 https://github.com/rajarshd/Gaussian_LDA
 
+
+## Data
+
+20 News Groups
+http://qwone.com/~jason/20Newsgroups/
 
 
 
