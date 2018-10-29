@@ -11,3 +11,5 @@ conda install -c pytorch pytorch
 pip install --upgrade pip
 
 pip install pyro-ppl
+
+conda install nb_conda # for environment picking  
