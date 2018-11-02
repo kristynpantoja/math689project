@@ -1,7 +1,14 @@
 ## LDA stuff
 + pyro ELBO_tracenum
+  + gaussian LDA with SVI
 + or just write ourselves
 
 ## pretrained word vectors
 + find pretrained
 + find fitters
+
+--- 
+Tried:
+separately trained word2vec word vectors for neural variational topic model
+  + freeze = true, don't learn vectors
+running Gaussian LDA with GloVe
