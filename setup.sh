@@ -13,3 +13,7 @@ pip install --upgrade pip
 pip install pyro-ppl
 
 conda install nb_conda # for environment picking  
+
+conda install scikit-learn
+
+conda install gensim
