@@ -12,3 +12,11 @@ Tried:
 separately trained word2vec word vectors for neural variational topic model
   + freeze = true, don't learn vectors
 running Gaussian LDA with GloVe
+
+## 11/4
+
+Synchronize 20newsgroups preprocess between us and Das et al.
+  - Just use their setup, their vocab. 
+  - we couldn't load the vocab.txt to colab; have to work locally?
+  - one way out -- gaussian Lda with pyro in colab
+Keep poking the neural lda model
