@@ -144,13 +144,18 @@ class LDA(TopicVAE):
 
 
 class GSMLDA(TopicVAE):
-    def __init__(self, net_arch):
+    def __init__(self, net_arch, pretrained_embed_matrix=None):
         super().__init__(net_arch)
-        self.word_embedding = nn.Embedding(self.net_arch.num_input, 50) # decoder
-        self.word_embedding_bn = nn.BatchNorm1d(50)
-        self.topic_embedding = nn.Embedding(self.net_arch.num_topic, 50) # decoder
-        self.topic_embedding_bn = nn.BatchNorm1d(50)
-        self.beta = torch.zeros([self.net_arch.num_topic, self.net_arch.num_input], dtype = torch.float32) # decoder
+        if pretrained_embed_matrix == None:
+            self.word_embedding = nn.Embedding(net_arch.num_input, net_arch.embedding_dim)
+        else:
+            assert net_arch.embedding_dim == pretrained_embed_matrix.shape[1], "embedding dimension doesn't match embedding matrix"
+            self.word_embedding = nn.Embedding.from_pretrained(torch.tensor(pretrained_embed_matrix), freeze=True)
+            # later on, option to change freeze=False
+        self.word_embedding_bn = nn.BatchNorm1d(net_arch.embedding_dim)
+        self.topic_embedding = nn.Embedding(self.net_arch.num_topic, net_arch.embedding_dim)
+        self.topic_embedding_bn = nn.BatchNorm1d(net_arch.embedding_dim)
+        self.beta = torch.zeros([self.net_arch.num_topic, self.net_arch.num_input], dtype = torch.float32)
 
     def generative(self, z):
         assert z.shape[1] == self.net_arch.num_topic, "hidden variable z (from TR) isn't batch size x num_topic"    
@@ -167,13 +172,18 @@ class GSMLDA(TopicVAE):
       
       
 class GSMProdLDA(TopicVAE):
-    def __init__(self, net_arch):
+    def __init__(self, net_arch, pretrained_embed_matrix=None):
         super().__init__(net_arch)
-        self.word_embedding = nn.Embedding(self.net_arch.num_input, 50) # decoder
-        self.word_embedding_bn = nn.BatchNorm1d(50)
-        self.topic_embedding = nn.Embedding(self.net_arch.num_topic, 50) # decoder
-        self.topic_embedding_bn = nn.BatchNorm1d(50)
-        self.beta = torch.zeros([self.net_arch.num_topic, self.net_arch.num_input], dtype = torch.float32) # decoder
+        if pretrained_embed_matrix == None:
+            self.word_embedding = nn.Embedding(net_arch.num_input, net_arch.embedding_dim)
+        else:
+            assert net_arch.embedding_dim == pretrained_embed_matrix.shape[1], "embedding dimension doesn't match embedding matrix"
+            self.word_embedding = nn.Embedding.from_pretrained(torch.tensor(pretrained_embed_matrix), freeze=True)
+            # later on, option to change freeze=False
+        self.word_embedding_bn = nn.BatchNorm1d(net_arch.embedding_dim)
+        self.topic_embedding = nn.Embedding(self.net_arch.num_topic, net_arch.embedding_dim)
+        self.topic_embedding_bn = nn.BatchNorm1d(net_arch.embedding_dim)
+        self.beta = torch.zeros([self.net_arch.num_topic, self.net_arch.num_input], dtype = torch.float32)
 
     def generative(self, z):
         assert z.shape[1] == self.net_arch.num_topic, "hidden variable z (from TR) isn't batch size x num_topic"    
