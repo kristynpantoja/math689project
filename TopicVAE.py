@@ -146,11 +146,11 @@ class LDA(TopicVAE):
 class GSMLDA(TopicVAE):
     def __init__(self, net_arch, pretrained_embed_matrix=None):
         super().__init__(net_arch)
-        if pretrained_embed_matrix == None:
+        if pretrained_embed_matrix is None:
             self.word_embedding = nn.Embedding(net_arch.num_input, net_arch.embedding_dim)
         else:
             assert net_arch.embedding_dim == pretrained_embed_matrix.shape[1], "embedding dimension doesn't match embedding matrix"
-            self.word_embedding = nn.Embedding.from_pretrained(torch.tensor(pretrained_embed_matrix), freeze=True)
+            self.word_embedding = nn.Embedding.from_pretrained(torch.tensor(pretrained_embed_matrix, dtype = torch.float32), freeze=True)
             # later on, option to change freeze=False
         self.word_embedding_bn = nn.BatchNorm1d(net_arch.embedding_dim)
         self.topic_embedding = nn.Embedding(self.net_arch.num_topic, net_arch.embedding_dim)
@@ -174,11 +174,11 @@ class GSMLDA(TopicVAE):
 class GSMProdLDA(TopicVAE):
     def __init__(self, net_arch, pretrained_embed_matrix=None):
         super().__init__(net_arch)
-        if pretrained_embed_matrix == None:
+        if pretrained_embed_matrix is None:
             self.word_embedding = nn.Embedding(net_arch.num_input, net_arch.embedding_dim)
         else:
             assert net_arch.embedding_dim == pretrained_embed_matrix.shape[1], "embedding dimension doesn't match embedding matrix"
-            self.word_embedding = nn.Embedding.from_pretrained(torch.tensor(pretrained_embed_matrix), freeze=True)
+            self.word_embedding = nn.Embedding.from_pretrained(torch.tensor(pretrained_embed_matrix, dtype = torch.float32), freeze=True)
             # later on, option to change freeze=False
         self.word_embedding_bn = nn.BatchNorm1d(net_arch.embedding_dim)
         self.topic_embedding = nn.Embedding(self.net_arch.num_topic, net_arch.embedding_dim)
