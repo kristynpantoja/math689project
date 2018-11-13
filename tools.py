@@ -25,7 +25,7 @@ def topic_coherence(beta, M, doc_term_matrix):
 
 associations = {
     'jesus': ['prophet', 'jesus', 'matthew', 'christ', 'worship', 'church'],
-    'comp ': ['floppy', 'windows', 'microsoft', 'monitor', 'workstation', 'macintosh', 
+    'comp ': ['floppy', 'windows', 'microsoft', 'monitor', 'workstation', 'macintosh',
               'printer', 'programmer', 'colormap', 'scsi', 'jpeg', 'compression'],
     'car  ': ['wheel', 'tire'],
     'polit': ['amendment', 'libert', 'regulation', 'president'],
@@ -51,7 +51,7 @@ def print_top_words(beta, feature_names, n_top_words=10):
     print('---------------Printing the Topics------------------')
     beta = beta.T
     for i in range(len(beta)):
-        line = " ".join([feature_names[j] 
+        line = " ".join([feature_names[j]
                             for j in beta[i].argsort()[:-n_top_words - 1:-1]])
         topics = identify_topic_in_line(line)
         print('|'.join(topics))
@@ -78,8 +78,8 @@ def create_language_model(filename, model = None, doc_term_matrix = None,
     return model
 
 def create_embedding_matrix(language_model, vocab_list):
-    vocab_size, dim = language_model.syn1neg.shape
-    embedding_matrix = np.random.randn(vocab_size, dim)
+    _, dim = language_model.syn1neg.shape
+    embedding_matrix = np.random.randn(len(vocab_list), dim)
     iterator = 0
     for word in vocab_list:
         if word in language_model.wv.vocab:
