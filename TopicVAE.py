@@ -95,6 +95,7 @@ def train(model, args, optimizer, dataset):
     optimizer - nn.optim
     dataset - docs x vocab tensor document term matrix
     '''
+    losses = []
     for epoch in range(args.num_epoch):
         all_indices = torch.randperm(dataset.size(0)).split(args.batch_size)
         loss_epoch = 0.0
@@ -111,8 +112,9 @@ def train(model, args, optimizer, dataset):
             loss_epoch += loss.data[0]    # add loss to loss_epoch
         if epoch % 5 == 0:
             print('Epoch {}, loss={}'.format(epoch, loss_epoch / len(all_indices)))
+        losses.append(loss_epoch / len(all_indices))
 
-    return model
+    return model, losses
             
             
 class ProdLDA(TopicVAE):
