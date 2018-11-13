@@ -38,7 +38,12 @@ def identify_topic_in_line(line):
                 break
     return topics
 def print_top_words(beta, feature_names, n_top_words=10):
+    '''
+    beta - V X K
+    feature_names - V
+    '''
     print('---------------Printing the Topics------------------')
+    beta = beta.T
     for i in range(len(beta)):
         line = " ".join([feature_names[j] 
                             for j in beta[i].argsort()[:-n_top_words - 1:-1]])
