@@ -146,7 +146,7 @@ class LDA(TopicVAE):
         return recon
 
     def get_beta(self):
-        return self.decoder.weight.data.cpu().numpy()
+        return self.beta.detach().numpy()
 
 
 class GSMLDA(TopicVAE):
