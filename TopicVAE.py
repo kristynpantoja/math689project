@@ -4,6 +4,8 @@ from torch.autograd import Variable
 from torch.nn import Parameter
 import torch.nn.functional as F
 import math
+from os.path import isfile
+
 
 class TopicVAE(nn.Module):
     def __init__(self, net_arch):
@@ -33,6 +35,8 @@ class TopicVAE(nn.Module):
         # initialize decoder weight
         if ac.init_mult != 0:
             self.decoder.weight.data.uniform_(0, ac.init_mult)
+        # save losses
+        self.losses = []
 
     def encoder(self, input):
         assert input.shape[1] == self.net_arch.num_input, "input isn't batch size x vocab size"
@@ -95,7 +99,6 @@ def train(model, args, optimizer, dataset):
     optimizer - nn.optim
     dataset - docs x vocab tensor document term matrix
     '''
-    losses = []
     for epoch in range(args.num_epoch):
         all_indices = torch.randperm(dataset.size(0)).split(args.batch_size)
         loss_epoch = 0.0
@@ -112,20 +115,10 @@ def train(model, args, optimizer, dataset):
             loss_epoch += loss.data[0]    # add loss to loss_epoch
         if epoch % 5 == 0:
             print('Epoch {}, loss={}'.format(epoch, loss_epoch / len(all_indices)))
-        losses.append(loss_epoch / len(all_indices))
+        model.losses.append(loss_epoch / len(all_indices))
 
-    return model, losses
+    return model
 
-def create_TopicVAE_model(filename, TopicVAE_model, args, doc_term_tensor):
-    if isfile(filename):
-        TopicVAE_model = torch.load(filename)
-        losses = None
-    else:
-        TopicVAE_model = TopicVAE_model
-        optimizer = torch.optim.Adam(TopicVAE_model.parameters(), args.learning_rate, betas=(args.momentum, 0.999))
-        TopicVAE_model, losses = TopicVAE.train(TopicVAE_model, args, optimizer, doc_term_tensor)
-        torch.save(TopicVAE_model, filename)
-    return TopicVAE_model, losses
 
 class ProdLDA(TopicVAE):
     def __init__(self, net_arch):

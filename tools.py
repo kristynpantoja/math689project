@@ -5,8 +5,21 @@ import gensim.downloader as api
 from gensim.models import Word2Vec, FastText, KeyedVectors
 from os.path import isfile
 import TopicVAE
+import torch
+
 
 ## Topic modeling
+
+def create_TopicVAE_model(filename, TopicVAE_model, args, doc_term_tensor):
+    if isfile(filename):
+        TopicVAE_model = torch.load(filename)
+    else:
+        TopicVAE_model = TopicVAE_model
+        optimizer = torch.optim.Adam(TopicVAE_model.parameters(), args.learning_rate, betas=(args.momentum, 0.999))
+        TopicVAE_model = TopicVAE.train(TopicVAE_model, args, optimizer, doc_term_tensor)
+        torch.save(TopicVAE_model, filename)
+    return TopicVAE_model
+
 
 def topic_coherence(beta, M, doc_term_matrix):
   K = beta.shape[1] # beta has dim V x K
