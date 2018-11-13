@@ -58,6 +58,17 @@ def print_top_words(beta, feature_names, n_top_words=10):
         print('     {}'.format(line))
     print('---------------End of Topics------------------')
 
+## perplexity
+
+def perplexity(model, test_set):
+    '''
+    model - trained model
+    test_set - tensor
+    '''
+    avg_log_lik = model.forward(test_set, compute_loss = True, avg_loss = True)
+    return 2.**(-avg_log_lik)
+
+
 ## Word vectors
 
 def create_language_model(filename, model = None, doc_term_matrix = None,
