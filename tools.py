@@ -4,6 +4,7 @@ from itertools import product
 import gensim.downloader as api
 from gensim.models import Word2Vec, FastText, KeyedVectors
 from os.path import isfile
+import TopicVAE
 
 ## Topic modeling
 
@@ -66,8 +67,9 @@ def perplexity(model, test_set):
     test_set - tensor
     '''
     doc_lens = test_set.sum(1)
-    log_liks = model.forward(test_set, compute_loss = True, avg_loss = False)
-    return 2.**((log_liks / doc_lens).mean().exp())
+    _, log_liks = model.forward(test_set, compute_loss = True, avg_loss = False)
+    return (log_liks / doc_lens).mean().exp()
+
 
 
 ## Word vectors

@@ -33,7 +33,7 @@ class TopicVAE(nn.Module):
         # initialize decoder weight
         if ac.init_mult != 0:
             self.decoder.weight.data.uniform_(0, ac.init_mult)
-            
+
     def encoder(self, input):
         assert input.shape[1] == self.net_arch.num_input, "input isn't batch size x vocab size"
         en1 = F.softplus(self.en1_fc(input))                            # en1_fc   output
@@ -43,22 +43,22 @@ class TopicVAE(nn.Module):
         posterior_logvar = self.logvar_bn(self.logvar_fc(en2))          # posterior log variance
         posterior_var    = posterior_logvar.exp()
         return posterior_mean, posterior_logvar, posterior_var
-    
+
     def reparameterize(self, input, posterior_mean, posterior_var):
         eps = Variable(input.data.new().resize_as_(posterior_mean.data).normal_()) # noise
         z = posterior_mean + posterior_var.sqrt() * eps                 # reparameterization
         return z
-      
+
     def generative(self, z):
         raise NotImplementedError
-        
+
     def forward(self, input, compute_loss=False, avg_loss=True):
         # compute posterior
         posterior_mean, posterior_logvar, posterior_var = self.encoder(input)
         z = self.reparameterize(input, posterior_mean, posterior_var)
         recon = self.generative(z)
         assert recon.shape[1] == self.net_arch.num_input, "output isn't batch size x vocab size"
-        
+
         if compute_loss:
             return recon, self.loss(input, recon, posterior_mean, posterior_logvar, posterior_var, avg_loss)
         else:
@@ -67,7 +67,7 @@ class TopicVAE(nn.Module):
     def loss(self, input, recon, posterior_mean, posterior_logvar, posterior_var, avg=True):
         # NL
         NL  = -(input * (recon+1e-10).log()).sum(1) # vector with batch-size number of elements
-        # KLD, see Section 3.3 of Akash Srivastava and Charles Sutton, 2017, 
+        # KLD, see Section 3.3 of Akash Srivastava and Charles Sutton, 2017,
         # https://arxiv.org/pdf/1703.01488.pdf
         prior_mean   = Variable(self.prior_mean).expand_as(posterior_mean) # batch-size x num_topics
         prior_var    = Variable(self.prior_var).expand_as(posterior_mean)
@@ -85,9 +85,9 @@ class TopicVAE(nn.Module):
             return loss.mean() # averaged over all the documents in the batch (1/batch_size)*sum
         else:
             return loss
-          
-    
-          
+
+
+
 def train(model, args, optimizer, dataset):
     '''
     model - object of class TopicVAE
@@ -115,14 +115,24 @@ def train(model, args, optimizer, dataset):
         losses.append(loss_epoch / len(all_indices))
 
     return model, losses
-            
-            
+
+def create_TopicVAE_model(filename, TopicVAE_model, args, doc_term_tensor):
+    if isfile(filename):
+        TopicVAE_model = torch.load(filename)
+        losses = None
+    else:
+        TopicVAE_model = TopicVAE_model
+        optimizer = torch.optim.Adam(TopicVAE_model.parameters(), args.learning_rate, betas=(args.momentum, 0.999))
+        TopicVAE_model, losses = TopicVAE.train(TopicVAE_model, args, optimizer, doc_term_tensor)
+        torch.save(TopicVAE_model, filename)
+    return TopicVAE_model, losses
+
 class ProdLDA(TopicVAE):
     def __init__(self, net_arch):
         super().__init__(net_arch)
-        
+
     def generative(self, z):
-        assert z.shape[1] == self.net_arch.num_topic, "hidden variable z (from TR) isn't batch size x num_topic"    
+        assert z.shape[1] == self.net_arch.num_topic, "hidden variable z (from TR) isn't batch size x num_topic"
         p = F.softmax(z)                                                # mixture probability
         p = self.p_drop(p)
         assert p.shape[1] == self.net_arch.num_topic, "p (theta) isn't same size as z"
@@ -131,16 +141,16 @@ class ProdLDA(TopicVAE):
 
     def get_beta(self):
         return self.decoder.weight.data.cpu().numpy()
-    
+
 
 class LDA(TopicVAE):
     def __init__(self, net_arch):
         super().__init__(net_arch)
         self.beta = nn.Parameter(torch.randn([self.net_arch.num_input, self.net_arch.num_topic]))
         self.beta_bn = nn.BatchNorm1d(self.net_arch.num_topic)
-        
+
     def generative(self, z):
-        assert z.shape[1] == self.net_arch.num_topic, "hidden variable z (from TR) isn't batch size x num_topic"    
+        assert z.shape[1] == self.net_arch.num_topic, "hidden variable z (from TR) isn't batch size x num_topic"
         p = F.softmax(z)                                                # mixture probability
         p = self.p_drop(p)
         assert p.shape[1] == self.net_arch.num_topic, "p (theta) isn't same size as z"
@@ -158,7 +168,7 @@ class GSMLDA(TopicVAE):
             self.word_embedding = nn.Embedding(net_arch.num_input, net_arch.embedding_dim)
         else:
             assert net_arch.embedding_dim == pretrained_embed_matrix.shape[1], "embedding dimension doesn't match embedding matrix"
-            self.word_embedding = nn.Embedding.from_pretrained(torch.tensor(pretrained_embed_matrix, dtype = torch.float32), 
+            self.word_embedding = nn.Embedding.from_pretrained(torch.tensor(pretrained_embed_matrix, dtype = torch.float32),
                 freeze = net_arch.freeze)
             # later on, option to change freeze=False
         self.word_embedding_bn = nn.BatchNorm1d(net_arch.embedding_dim)
@@ -167,7 +177,7 @@ class GSMLDA(TopicVAE):
         self.beta = torch.zeros([self.net_arch.num_topic, self.net_arch.num_input], dtype = torch.float32)
 
     def generative(self, z):
-        assert z.shape[1] == self.net_arch.num_topic, "hidden variable z (from TR) isn't batch size x num_topic"    
+        assert z.shape[1] == self.net_arch.num_topic, "hidden variable z (from TR) isn't batch size x num_topic"
         p = F.softmax(z)                                                # mixture probability
         p = self.p_drop(p)
         assert p.shape[1] == self.net_arch.num_topic, "p (theta) isn't same size as z"
@@ -181,7 +191,7 @@ class GSMLDA(TopicVAE):
 
     def get_beta(self):
         return self.beta.detach().numpy()
-      
+
 
 class GSMProdLDA(TopicVAE):
     def __init__(self, net_arch, pretrained_embed_matrix=None):
@@ -190,7 +200,7 @@ class GSMProdLDA(TopicVAE):
             self.word_embedding = nn.Embedding(net_arch.num_input, net_arch.embedding_dim)
         else:
             assert net_arch.embedding_dim == pretrained_embed_matrix.shape[1], "embedding dimension doesn't match embedding matrix"
-            self.word_embedding = nn.Embedding.from_pretrained(torch.tensor(pretrained_embed_matrix, dtype = torch.float32), 
+            self.word_embedding = nn.Embedding.from_pretrained(torch.tensor(pretrained_embed_matrix, dtype = torch.float32),
                 freeze = net_arch.freeze)
             # later on, option to change freeze=False
         self.word_embedding_bn = nn.BatchNorm1d(net_arch.embedding_dim)
@@ -199,7 +209,7 @@ class GSMProdLDA(TopicVAE):
         self.beta = torch.zeros([self.net_arch.num_topic, self.net_arch.num_input], dtype = torch.float32)
 
     def generative(self, z):
-        assert z.shape[1] == self.net_arch.num_topic, "hidden variable z (from TR) isn't batch size x num_topic"    
+        assert z.shape[1] == self.net_arch.num_topic, "hidden variable z (from TR) isn't batch size x num_topic"
         p = F.softmax(z)                                                # mixture probability
         p = self.p_drop(p)
         assert p.shape[1] == self.net_arch.num_topic, "p (theta) isn't same size as z"
