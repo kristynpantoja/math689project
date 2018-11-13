@@ -1,6 +1,12 @@
 import numpy as np
 from itertools import product
 
+import gensim.downloader as api
+from gensim.models import Word2Vec, FastText, KeyedVectors
+from os.path import isfile
+
+## Topic modeling
+
 def topic_coherence(beta, M, doc_term_matrix):
   K = beta.shape[1] # beta has dim V x K
   coherences = np.zeros(K)
@@ -51,3 +57,37 @@ def print_top_words(beta, feature_names, n_top_words=10):
         print('|'.join(topics))
         print('     {}'.format(line))
     print('---------------End of Topics------------------')
+
+## Word vectors
+
+def create_language_model(filename, model = None, doc_term_matrix = None,
+                             vocab_list = [], epochs = 10, sentences = []):
+    '''
+
+    '''
+    if not isfile(filename):
+        dict_word_freq = dict(zip(vocab_list, list(doc_term_matrix.sum(0))))
+        model.build_vocab_from_freq(word_freq = dict_word_freq)
+        # train the model
+        model.train(sentences = sentences, epochs = epochs, total_examples = doc_term_matrix.shape[1])
+        # save the model
+        model.save(filename)
+    else:
+        model = KeyedVectors.load(filename)
+
+    return model
+
+def create_embedding_matrix(language_model, vocab_list):
+    vocab_size, dim = language_model.syn1neg.shape
+    embedding_matrix = np.random.randn(vocab_size, dim)
+    iterator = 0
+    for word in vocab_list:
+        if word in language_model.wv.vocab:
+            embedding_matrix[iterator] = language_model.wv.word_vec(word)
+        else:
+            continue
+            # embedding_matrix2[iterator] = pretrained_language_model.wv.most_similar(word)
+            # or something like that
+        iterator += 1
+
+    return embedding_matrix
