@@ -65,8 +65,9 @@ def perplexity(model, test_set):
     model - trained model
     test_set - tensor
     '''
-    avg_log_lik = model.forward(test_set, compute_loss = True, avg_loss = True)
-    return 2.**(-avg_log_lik)
+    doc_lens = test_set.sum(1)
+    log_liks = model.forward(test_set, compute_loss = True, avg_loss = False)
+    return 2.**((log_liks / doc_lens).mean().exp())
 
 
 ## Word vectors
