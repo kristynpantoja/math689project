@@ -126,6 +126,9 @@ class ProdLDA(TopicVAE):
         assert p.shape[1] == self.net_arch.num_topic, "p (theta) isn't same size as z"
         recon = F.softmax(self.decoder_bn(self.decoder(p)))             # reconstructed distribution over vocabulary
         return recon
+
+    def get_beta(self):
+        return self.decoder.weight.data.cpu().numpy()
     
 
 class LDA(TopicVAE):
@@ -141,6 +144,9 @@ class LDA(TopicVAE):
         assert p.shape[1] == self.net_arch.num_topic, "p (theta) isn't same size as z"
         recon = F.softmax(self.beta_bn(self.beta), dim=0).mm(p.t()).t()
         return recon
+
+    def get_beta(self):
+        return self.decoder.weight.data.cpu().numpy()
 
 
 class GSMLDA(TopicVAE):
@@ -170,8 +176,11 @@ class GSMLDA(TopicVAE):
         recon = p.mm(self.beta.t())         # reconstructed distribution over vocabulary
         # p is batchxK so batchxK times KxV => batchxV
         return recon
+
+    def get_beta(self):
+        return self.beta.detach().numpy()
       
-      
+
 class GSMProdLDA(TopicVAE):
     def __init__(self, net_arch, pretrained_embed_matrix=None):
         super().__init__(net_arch)
@@ -199,3 +208,6 @@ class GSMProdLDA(TopicVAE):
         recon = F.softmax(p.mm(self.beta.t()), dim = 0)         # reconstructed distribution over vocabulary
         # p is batchxK so batchxK times KxV => batchxV
         return recon
+
+    def get_beta(self):
+        return self.beta.detach().numpy()
