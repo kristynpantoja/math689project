@@ -1,5 +1,5 @@
 import numpy as np
-from itertools import product
+from itertools import product, combinations
 
 import gensim.downloader as api
 from gensim.models import Word2Vec, FastText, KeyedVectors
@@ -21,21 +21,48 @@ def create_TopicVAE_model(filename, TopicVAE_model, args, doc_term_tensor):
     return TopicVAE_model
 
 
-def topic_coherence(beta, M, doc_term_matrix):
-  K = beta.shape[1] # beta has dim V x K
-  coherences = np.zeros(K)
-  for t in range(K):
-    index = np.argsort(-beta[:, t])[0:M]
-    cart_prod = product(list(index), list(index))
-    for ind1, ind2 in cart_prod:
-      if ind1 == ind2:
-        pass
-      else:
-        d_ind1 = (doc_term_matrix[:, ind1] > 0).sum()
-        d_ind12 = ((doc_term_matrix[:, ind1] > 0) & (doc_term_matrix[:, ind2] > 0)).sum()
-        coherences[t] += np.log1p(d_ind12) - np.log(d_ind1)
+# def topic_coherence_NPMI(beta, M, doc_term_matrix):
+#   corpus_word_count = doc_term_matrix.sum()
+#   K = beta.shape[1] # beta has dim V x K
+#   coherences = np.zeros(K)
+#   for t in range(K):
+#     index = np.argsort(-beta[:, t])[0:M]
+#     cart_prod = product(list(index), list(index))
+#     for ind1, ind2 in cart_prod:
+#       if ind1 == ind2:
+#         pass
+#       else:
+#         d_ind2 = (doc_term_matrix[:, ind2] > 0).sum()
+#         d_ind1 = (doc_term_matrix[:, ind1] > 0).sum()
+#         d_ind12 = ((doc_term_matrix[:, ind1] > 0) & (doc_term_matrix[:, ind2] > 0)).sum()
+#         p_1 = d_ind1 / corpus_word_count
+#         p_2 = d_ind2 / corpus_word_count
+#         p_12 = d_ind12 / corpus_word_count
+#
+#         # coherences[t] += np.log1p(d_ind12) - np.log(d_ind1) #- np.log(d_ind2)
+#
+#   return coherences
 
-  return coherences
+def topic_coherence_NPMI(beta, M, doc_term_matrix):
+    corpus_word_count = doc_term_matrix.sum()
+    epsilon = 1e-8
+    K = beta.shape[1] # beta has dim V x K
+    coherences = np.zeros(K)
+    for t in range(K):
+        index = np.argsort(-beta[:, t])[0:M]
+        combos = combinations(list(index), 2)
+        for ind1, ind2 in combos:
+            if_2 = doc_term_matrix[:, ind2] > 0
+            if_1 = doc_term_matrix[:, ind1] > 0
+            d_ind2 = if_2.sum()
+            d_ind1 = if_1.sum()
+            d_ind12 = (if_1 & if_2).sum()
+            p_1 = d_ind1 / corpus_word_count
+            p_2 = d_ind2 / corpus_word_count
+            p_12 = d_ind12 / corpus_word_count
+            coherences[t] += (np.log(p_12 + epsilon) - np.log(p_1 + epsilon) - np.log(p_2 + epsilon)) / -np.log(p_12 + epsilon)
+    return coherences
+
 
 associations = {
     'jesus': ['prophet', 'jesus', 'matthew', 'christ', 'worship', 'church'],
@@ -81,7 +108,7 @@ def perplexity(model, test_set):
     '''
     doc_lens = test_set.sum(1)
     _, log_liks = model.forward(test_set, compute_loss = True, avg_loss = False)
-    return (log_liks / doc_lens).mean().exp()
+    return (log_liks / doc_lens).mean().exp().detach().numpy()
 
 
 
